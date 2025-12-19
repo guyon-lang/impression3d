@@ -90,17 +90,12 @@ document.addEventListener("DOMContentLoaded", function() {
     return `${day}-${month}-${year}`;
   }
 
-  function parseDateFR(dateFR) {
-    if(!dateFR) return "";
-    const [day, month, year] = dateFR.split('-');
-    return `${year}-${month}-${day}`;
-  }
-
   // ---------------------- Routage Hash ----------------------
   function updateView() {
     if(location.hash === "#/gestionnaire") {
       document.getElementById("demandeur").classList.add("hidden");
       document.getElementById("gestionnaire").classList.remove("hidden");
+      renderCalendar(); // ✅ Forcer le rendu après affichage
     } else {
       document.getElementById("demandeur").classList.remove("hidden");
       document.getElementById("gestionnaire").classList.add("hidden");
@@ -206,12 +201,11 @@ document.addEventListener("DOMContentLoaded", function() {
   function save() {
     localStorage.setItem("demandes", JSON.stringify(demandes));
     renderTable();
-    renderCalendar();
+    if(location.hash === "#/gestionnaire") renderCalendar(); // ✅ Toujours mettre à jour le calendrier
   }
 
   // ---------------------- Initialisation ----------------------
   renderTable();
-  renderCalendar();
 
 });
 </script>
