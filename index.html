@@ -4,10 +4,8 @@
 <meta charset="UTF-8">
 <title>Gestion Impressions 3D</title>
 
-<!-- FullCalendar CDN -->
+<!-- FullCalendar CSS -->
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales/fr.js"></script>
 
 <style>
 body {
@@ -98,9 +96,12 @@ button { cursor: pointer; }
 <div id="calendar"></div>
 </div>
 
+<!-- FullCalendar JS (placé juste avant la fermeture du body) -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales/fr.js"></script>
+
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-
   let demandes = JSON.parse(localStorage.getItem("demandes") || "[]");
   let calendar;
 
@@ -139,10 +140,9 @@ document.addEventListener("DOMContentLoaded", function() {
     save();
     e.target.reset();
 
-    // Affiche confirmation
     const conf = document.getElementById("confirmation");
     conf.style.display = "block";
-    setTimeout(() => { conf.style.display = "none"; }, 3000); // disparaît après 3s
+    setTimeout(() => { conf.style.display = "none"; }, 3000);
   };
 
   // ===== TABLEAU =====
@@ -170,18 +170,12 @@ document.addEventListener("DOMContentLoaded", function() {
 
   window.setStatut = function(id, statut) {
     let demande = demandes.find(d => d.id === id);
-    if (demande) {
-      demande.statut = statut;
-      save();
-    }
+    if (demande) { demande.statut = statut; save(); }
   }
 
   window.setDate = function(id, date) {
     let demande = demandes.find(d => d.id === id);
-    if (demande) {
-      demande.dateReelle = date;
-      save();
-    }
+    if (demande) { demande.dateReelle = date; save(); }
   }
 
   window.supprimer = function(id) {
@@ -225,7 +219,6 @@ document.addEventListener("DOMContentLoaded", function() {
   // ===== INITIALISATION =====
   renderTable();
   renderCalendar();
-
 });
 </script>
 
