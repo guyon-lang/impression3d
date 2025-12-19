@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -8,42 +8,15 @@
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet">
 
 <style>
-body {
-  font-family: Arial, sans-serif;
-  margin: 20px;
-}
+body { font-family: Arial, sans-serif; margin: 20px; }
 h1 { margin-top: 0; }
-
-form input, form select, form textarea, form button {
-  display: block;
-  margin-bottom: 10px;
-  width: 300px;
-}
-
-table {
-  border-collapse: collapse;
-  width: 100%;
-  margin-top: 20px;
-}
-th, td {
-  border: 1px solid #ccc;
-  padding: 5px;
-  text-align: center;
-}
-
-#calendar {
-  margin-top: 30px;
-  height: 650px;
-}
-
+form input, form select, form textarea, form button { display: block; margin-bottom: 10px; width: 300px; }
+table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+th, td { border: 1px solid #ccc; padding: 5px; text-align: center; }
+#calendar { margin-top: 30px; height: 650px; }
 .hidden { display: none; }
 button { cursor: pointer; }
-
-#confirmation {
-  color: green;
-  display: none;
-  margin-top: 10px;
-}
+#confirmation { color: green; display: none; margin-top: 10px; }
 </style>
 </head>
 
@@ -51,7 +24,7 @@ button { cursor: pointer; }
 
 <h1>Gestion Impressions 3D – Bambu Lab H2D</h1>
 
-<!-- ================= DEMANDEUR ================= -->
+<!-- DEMANDEUR -->
 <div id="demandeur">
 <h2>Nouvelle demande d'impression</h2>
 
@@ -74,7 +47,7 @@ button { cursor: pointer; }
 <p id="confirmation">✅ Votre demande a bien été envoyée.</p>
 </div>
 
-<!-- ================= GESTIONNAIRE ================= -->
+<!-- GESTIONNAIRE -->
 <div id="gestionnaire" class="hidden">
 <h2>Gestionnaire</h2>
 
@@ -100,16 +73,15 @@ button { cursor: pointer; }
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales/fr.js" defer></script>
 
-<!-- Script principal -->
 <script defer>
 document.addEventListener("DOMContentLoaded", function() {
 
   let demandes = JSON.parse(localStorage.getItem("demandes") || "[]");
   let calendar;
 
-  // ===== ROUTAGE HASH =====
+  // ROUTAGE HASH
   function updateView() {
-    if (location.hash === "#/gestionnaire") {
+    if(location.hash === "#/gestionnaire") {
       document.getElementById("demandeur").classList.add("hidden");
       document.getElementById("gestionnaire").classList.remove("hidden");
     } else {
@@ -120,21 +92,16 @@ document.addEventListener("DOMContentLoaded", function() {
   window.addEventListener("hashchange", updateView);
   updateView();
 
-  // ===== FORMULAIRE =====
+  // FORMULAIRE
   document.getElementById("formDemande").onsubmit = function(e) {
     e.preventDefault();
 
-    let nomInput = document.getElementById("nom").value;
-    let fichierInput = document.getElementById("fichier").value;
-    let prioriteInput = document.getElementById("priorite").value;
-    let dateSouhaiteeInput = document.getElementById("dateSouhaitee").value;
-
     demandes.push({
       id: Date.now(),
-      nom: nomInput,
-      fichier: fichierInput,
-      priorite: prioriteInput,
-      dateSouhaitee: dateSouhaiteeInput,
+      nom: document.getElementById("nom").value,
+      fichier: document.getElementById("fichier").value,
+      priorite: document.getElementById("priorite").value,
+      dateSouhaitee: document.getElementById("dateSouhaitee").value,
       dateReelle: "",
       statut: "En attente"
     });
@@ -142,13 +109,12 @@ document.addEventListener("DOMContentLoaded", function() {
     save();
     e.target.reset();
 
-    // Affiche confirmation
     const conf = document.getElementById("confirmation");
     conf.style.display = "block";
     setTimeout(() => { conf.style.display = "none"; }, 3000);
   };
 
-  // ===== TABLEAU =====
+  // TABLEAU
   function renderTable() {
     const tableBody = document.getElementById("tableDemandes");
     tableBody.innerHTML = "";
@@ -173,33 +139,27 @@ document.addEventListener("DOMContentLoaded", function() {
 
   window.setStatut = function(id, statut) {
     let demande = demandes.find(d => d.id === id);
-    if (demande) {
-      demande.statut = statut;
-      save();
-    }
+    if(demande) { demande.statut = statut; save(); }
   }
 
   window.setDate = function(id, date) {
     let demande = demandes.find(d => d.id === id);
-    if (demande) {
-      demande.dateReelle = date;
-      save();
-    }
+    if(demande) { demande.dateReelle = date; save(); }
   }
 
   window.supprimer = function(id) {
-    if (confirm("Supprimer cette demande ?")) {
+    if(confirm("Supprimer cette demande ?")) {
       demandes = demandes.filter(d => d.id !== id);
       save();
     }
   }
 
-  // ===== CALENDRIER =====
+  // CALENDRIER
   function renderCalendar() {
     const calendarEl = document.getElementById("calendar");
-    if (!calendarEl || typeof FullCalendar === "undefined") return;
+    if(!calendarEl || typeof FullCalendar === "undefined") return;
 
-    if (calendar) calendar.destroy();
+    if(calendar) calendar.destroy();
 
     calendar = new FullCalendar.Calendar(calendarEl, {
       initialView: "dayGridMonth",
@@ -210,22 +170,21 @@ document.addEventListener("DOMContentLoaded", function() {
           title: `${d.nom} (${d.priorite})`,
           start: d.dateReelle,
           backgroundColor:
-            d.priorite === "Haute" ? "#ff6666" :
-            d.priorite === "Basse" ? "#93c47d" : "#ffd966"
+            d.priorite==="Haute"?"#ff6666":d.priorite==="Basse"?"#93c47d":"#ffd966"
         }))
     });
 
     calendar.render();
   }
 
-  // ===== SAUVEGARDE =====
+  // SAUVEGARDE
   function save() {
     localStorage.setItem("demandes", JSON.stringify(demandes));
     renderTable();
     renderCalendar();
   }
 
-  // ===== INITIALISATION =====
+  // INITIALISATION
   renderTable();
   renderCalendar();
 
