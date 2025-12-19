@@ -2,46 +2,193 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Test Calendrier 3D</title>
+<title>Gestion Impressions 3D</title>
 
-<!-- FullCalendar CSS et JS depuis CDN -->
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet" />
+<!-- FullCalendar CDN -->
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales/fr.js"></script>
 
 <style>
-body { font-family: Arial; margin: 20px; }
-#calendar { height: 600px; background: #f5f5f5; padding: 10px; border-radius: 8px; }
-h1 { color: #333; }
+body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+}
+h1 { margin-top: 0; }
+
+form input, form select, form textarea, form button {
+  display: block;
+  margin-bottom: 10px;
+  width: 300px;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-top: 20px;
+}
+th, td {
+  border: 1px solid #ccc;
+  padding: 5px;
+  text-align: center;
+}
+
+#calendar {
+  margin-top: 30px;
+  height: 650px;
+}
+
+.hidden { display: none; }
+button { cursor: pointer; }
 </style>
 </head>
 
 <body>
-<h1>Test Calendrier FullCalendar</h1>
+
+<h1>Gestion Impressions 3D – Bambu Lab H2D</h1>
+
+<!-- ================= DEMANDEUR ================= -->
+<div id="demandeur">
+<h2>Nouvelle demande d'impression</h2>
+
+<form id="formDemande">
+  <input required placeholder="Nom" id="nom">
+  <input required placeholder="Lien ou fichier STL" id="fichier">
+  
+  <select id="priorite">
+    <option>Basse</option>
+    <option selected>Normale</option>
+    <option>Haute</option>
+  </select>
+
+  <input type="date" id="dateSouhaitee">
+  <textarea placeholder="Commentaires (optionnel)" id="commentaires"></textarea>
+
+  <button type="submit">Envoyer la demande</button>
+</form>
+</div>
+
+<!-- ================= GESTIONNAIRE ================= -->
+<div id="gestionnaire" class="hidden">
+<h2>Gestionnaire</h2>
+
+<table>
+<thead>
+<tr>
+<th>Nom</th>
+<th>Fichier</th>
+<th>Priorité</th>
+<th>Date souhaitée</th>
+<th>Date réelle</th>
+<th>Statut</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody id="tableDemandes"></tbody>
+</table>
+
 <div id="calendar"></div>
+</div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const calendarEl = document.getElementById('calendar');
+let demandes = JSON.parse(localStorage.getItem("demandes") || "[]");
+let calendar;
 
-    const calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        locale: 'fr',
-        headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek'
-        },
-        events: [
-            { title: 'Événement Test', start: '2025-12-20', backgroundColor:'#ff6666', borderColor:'#ff6666' }
-        ],
-        eventClick: function(info) {
-            alert(info.event.title);
-        }
-    });
+function save() {
+  localStorage.setItem("demandes", JSON.stringify(demandes));
+  renderTable();
+  renderCalendar();
+}
 
-    calendar.render();
-});
+// ROUTAGE
+if (location.hash === "#/gestionnaire") {
+  document.getElementById("demandeur").classList.add("hidden");
+  document.getElementById("gestionnaire").classList.remove("hidden");
+}
+
+// FORMULAIRE
+document.getElementById("formDemande").onsubmit = e => {
+  e.preventDefault();
+  demandes.push({
+    id: Date.now(),
+    nom: nom.value,
+    fichier: fichier.value,
+    priorite: priorite.value,
+    dateSouhaitee: dateSouhaitee.value,
+    dateReelle: "",
+    statut: "En attente"
+  });
+  save();
+  e.target.reset();
+  alert("Demande envoyée");
+};
+
+// TABLEAU
+function renderTable() {
+  tableDemandes.innerHTML = "";
+  demandes.forEach(d => {
+    let tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${d.nom}</td>
+      <td><a href="${d.fichier}" target="_blank">Lien</a></td>
+      <td>${d.priorite}</td>
+      <td>${d.dateSouhaitee || ""}</td>
+      <td><input type="date" value="${d.dateReelle || ""}" onchange="setDate(${d.id}, this.value)"></td>
+      <td>${d.statut}</td>
+      <td>
+        <button onclick="setStatut(${d.id}, 'Validée')">Valider</button>
+        <button onclick="setStatut(${d.id}, 'Refusée')">Refuser</button>
+        <button onclick="supprimer(${d.id})">Supprimer</button>
+      </td>`;
+    tableDemandes.appendChild(tr);
+  });
+}
+
+function setStatut(id, s) {
+  let d = demandes.find(x => x.id === id);
+  d.statut = s;
+  save();
+}
+
+function setDate(id, date) {
+  let d = demandes.find(x => x.id === id);
+  d.dateReelle = date;
+  save();
+}
+
+function supprimer(id) {
+  if (confirm("Supprimer cette demande ?")) {
+    demandes = demandes.filter(d => d.id !== id);
+    save();
+  }
+}
+
+// CALENDRIER
+function renderCalendar() {
+  if (!document.getElementById("calendar")) return;
+
+  if (calendar) calendar.destroy();
+
+  calendar = new FullCalendar.Calendar(calendar, {
+    initialView: "dayGridMonth",
+    locale: "fr",
+    events: demandes
+      .filter(d => d.statut === "Validée" && d.dateReelle)
+      .map(d => ({
+        title: `${d.nom} (${d.priorite})`,
+        start: d.dateReelle,
+        backgroundColor:
+          d.priorite === "Haute" ? "#ff6666" :
+          d.priorite === "Basse" ? "#93c47d" : "#ffd966"
+      }))
+  });
+
+  calendar.render();
+}
+
+renderTable();
+renderCalendar();
 </script>
+
 </body>
 </html>
