@@ -99,10 +99,11 @@ button { cursor: pointer; }
 </div>
 
 <script>
+// ====================== VARIABLES ======================
 let demandes = JSON.parse(localStorage.getItem("demandes") || "[]");
 let calendar;
 
-// ROUTAGE SIMPLE
+// ====================== ROUTAGE HASH ======================
 function updateView() {
   if (location.hash === "#/gestionnaire") {
     document.getElementById("demandeur").classList.add("hidden");
@@ -115,16 +116,21 @@ function updateView() {
 window.addEventListener("hashchange", updateView);
 updateView();
 
-// FORMULAIRE
-document.getElementById("formDemande").onsubmit = e => {
+// ====================== FORMULAIRE ======================
+document.getElementById("formDemande").onsubmit = function(e) {
   e.preventDefault();
+
+  let nomInput = document.getElementById("nom").value;
+  let fichierInput = document.getElementById("fichier").value;
+  let prioriteInput = document.getElementById("priorite").value;
+  let dateSouhaiteeInput = document.getElementById("dateSouhaitee").value;
 
   demandes.push({
     id: Date.now(),
-    nom: nom.value,
-    fichier: fichier.value,
-    priorite: priorite.value,
-    dateSouhaitee: dateSouhaitee.value,
+    nom: nomInput,
+    fichier: fichierInput,
+    priorite: prioriteInput,
+    dateSouhaitee: dateSouhaiteeInput,
     dateReelle: "",
     statut: "En attente"
   });
@@ -135,9 +141,11 @@ document.getElementById("formDemande").onsubmit = e => {
   document.getElementById("confirmation").style.display = "block";
 };
 
-// TABLEAU
+// ====================== TABLEAU ======================
 function renderTable() {
-  tableDemandes.innerHTML = "";
+  const tableBody = document.getElementById("tableDemandes");
+  tableBody.innerHTML = "";
+
   demandes.forEach(d => {
     let tr = document.createElement("tr");
     tr.innerHTML = `
@@ -152,20 +160,24 @@ function renderTable() {
         <button onclick="setStatut(${d.id}, 'Refusée')">Refuser</button>
         <button onclick="supprimer(${d.id})">Supprimer</button>
       </td>`;
-    tableDemandes.appendChild(tr);
+    tableBody.appendChild(tr);
   });
 }
 
-function setStatut(id, s) {
-  let d = demandes.find(x => x.id === id);
-  d.statut = s;
-  save();
+function setStatut(id, statut) {
+  let demande = demandes.find(d => d.id === id);
+  if (demande) {
+    demande.statut = statut;
+    save();
+  }
 }
 
 function setDate(id, date) {
-  let d = demandes.find(x => x.id === id);
-  d.dateReelle = date;
-  save();
+  let demande = demandes.find(d => d.id === id);
+  if (demande) {
+    demande.dateReelle = date;
+    save();
+  }
 }
 
 function supprimer(id) {
@@ -175,13 +187,14 @@ function supprimer(id) {
   }
 }
 
-// CALENDRIER
+// ====================== CALENDRIER ======================
 function renderCalendar() {
-  if (!document.getElementById("calendar")) return;
+  const calendarEl = document.getElementById("calendar");
+  if (!calendarEl) return;
 
   if (calendar) calendar.destroy();
 
-  calendar = new FullCalendar.Calendar(document.getElementById("calendar"), {
+  calendar = new FullCalendar.Calendar(calendarEl, {
     initialView: "dayGridMonth",
     locale: "fr",
     events: demandes
@@ -198,16 +211,20 @@ function renderCalendar() {
   calendar.render();
 }
 
-// SAUVEGARDE ET RENDER
+// ====================== SAUVEGARDE ======================
 function save() {
   localStorage.setItem("demandes", JSON.stringify(demandes));
   renderTable();
   renderCalendar();
 }
 
+// ====================== INITIALISATION ======================
 renderTable();
 renderCalendar();
 </script>
 
 </body>
 </html>
+
+</html>
+
