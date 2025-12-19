@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <title>Gestion Impressions 3D</title>
 
-<!-- FullCalendar CSS -->
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet">
 
 <style>
@@ -18,7 +17,6 @@ th, td { border: 1px solid #ccc; padding: 5px; text-align: center; }
 button { cursor: pointer; }
 #confirmation { color: green; display: none; margin-top: 10px; }
 .date-fr { font-weight: bold; color: #333; margin-left: 5px; }
-nav a { margin-right: 10px; text-decoration: underline; cursor: pointer; color: blue; }
 </style>
 </head>
 
@@ -26,12 +24,7 @@ nav a { margin-right: 10px; text-decoration: underline; cursor: pointer; color: 
 
 <h1>Gestion Impressions 3D – Bambu Lab H2D</h1>
 
-<nav>
-  <a href="#/demandeur">Formulaire</a>
-  <a href="#/gestionnaire">Gestionnaire</a>
-</nav>
-
-<!-- DEMANDEUR -->
+<!-- FORMULAIRE -->
 <div id="demandeur">
 <h2>Nouvelle demande d'impression</h2>
 
@@ -55,7 +48,7 @@ nav a { margin-right: 10px; text-decoration: underline; cursor: pointer; color: 
 </div>
 
 <!-- GESTIONNAIRE -->
-<div id="gestionnaire" class="hidden">
+<div id="gestionnaire">
 <h2>Gestionnaire</h2>
 
 <table>
@@ -76,7 +69,6 @@ nav a { margin-right: 10px; text-decoration: underline; cursor: pointer; color: 
 <div id="calendar"></div>
 </div>
 
-<!-- FullCalendar JS via module ES -->
 <script type="module">
 import { Calendar } from 'https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.esm.js';
 import frLocale from 'https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales/fr.js';
@@ -86,7 +78,6 @@ document.addEventListener("DOMContentLoaded", function() {
   let demandes = JSON.parse(localStorage.getItem("demandes") || "[]");
   let calendar;
 
-  // ---------------------- Fonctions de conversion ----------------------
   function formatDateFR(isoDate) {
     if(!isoDate) return "";
     const d = new Date(isoDate);
@@ -96,30 +87,10 @@ document.addEventListener("DOMContentLoaded", function() {
     return `${day}-${month}-${year}`;
   }
 
-  // ---------------------- Hash / Routage ----------------------
-  function updateView() {
-    const hash = location.hash;
-    if(hash === "#/gestionnaire") {
-      document.getElementById("demandeur").classList.add("hidden");
-      document.getElementById("gestionnaire").classList.remove("hidden");
-      renderCalendar(); // rendu uniquement ici
-    } else {
-      document.getElementById("demandeur").classList.remove("hidden");
-      document.getElementById("gestionnaire").classList.add("hidden");
-    }
-  }
-
-  window.addEventListener("hashchange", updateView);
-  if(!window.location.hash || window.location.hash === "#/") {
-    window.location.hash = "#/demandeur";
-  }
-  updateView(); // exécute immédiatement
-
   // ---------------------- Formulaire ----------------------
   const form = document.getElementById("formDemande");
   form.onsubmit = function(e) {
     e.preventDefault();
-
     demandes.push({
       id: Date.now(),
       nom: document.getElementById("nom").value,
@@ -129,22 +100,19 @@ document.addEventListener("DOMContentLoaded", function() {
       dateReelle: "",
       statut: "En attente"
     });
-
     save();
     e.target.reset();
-
     const conf = document.getElementById("confirmation");
     conf.style.display = "block";
-    setTimeout(() => { conf.style.display = "none"; }, 3000);
+    setTimeout(()=>{ conf.style.display = "none"; },3000);
   };
 
   // ---------------------- Tableau ----------------------
   function renderTable() {
     const tableBody = document.getElementById("tableDemandes");
     tableBody.innerHTML = "";
-
     demandes.forEach(d => {
-      let tr = document.createElement("tr");
+      const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${d.nom}</td>
         <td><a href="${d.fichier}" target="_blank">Lien</a></td>
@@ -164,60 +132,45 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
-  // ---------------------- Gestion Statut / Date / Supprimer ----------------------
+  // ---------------------- Statut / Date / Supprimer ----------------------
   window.setStatut = function(id, statut) {
-    let demande = demandes.find(d => d.id === id);
-    if(demande) { demande.statut = statut; save(); }
+    const d = demandes.find(x=>x.id===id);
+    if(d){ d.statut = statut; save(); }
   }
 
-  window.setDate = function(id, date) {
-    let demande = demandes.find(d => d.id === id);
-    if(demande) { 
-      let d = new Date(date);
-      demande.dateReelle = d.toISOString().slice(0,10);
-      save(); 
-    }
+  window.setDate = function(id,date){
+    const d = demandes.find(x=>x.id===id);
+    if(d){ d.dateReelle = new Date(date).toISOString().slice(0,10); save(); }
   }
 
-  window.supprimer = function(id) {
-    if(confirm("Supprimer cette demande ?")) {
-      demandes = demandes.filter(d => d.id !== id);
-      save();
+  window.supprimer = function(id){
+    if(confirm("Supprimer cette demande ?")){
+      demandes = demandes.filter(x=>x.id!==id); save();
     }
   }
 
   // ---------------------- Calendrier ----------------------
   function renderCalendar() {
-    const calendarEl = document.getElementById("calendar");
-    if(!calendarEl) return;
-
+    const el = document.getElementById("calendar");
     if(calendar) calendar.destroy();
-
-    calendar = new Calendar(calendarEl, {
+    calendar = new Calendar(el,{
       initialView: "dayGridMonth",
       locale: frLocale,
-      events: demandes
-        .filter(d => d.statut === "Validée" && d.dateReelle)
-        .map(d => ({
-          title: `${d.nom} (${d.priorite})`,
-          start: d.dateReelle,
-          backgroundColor:
-            d.priorite==="Haute"?"#ff6666":d.priorite==="Basse"?"#93c47d":"#ffd966"
-        }))
+      events: demandes.filter(d=>d.statut==="Validée" && d.dateReelle)
+        .map(d=>({title:`${d.nom} (${d.priorite})`, start:d.dateReelle,
+                  backgroundColor:d.priorite==="Haute"?"#ff6666":d.priorite==="Basse"?"#93c47d":"#ffd966"}))
     });
-
     calendar.render();
   }
 
-  // ---------------------- Sauvegarde ----------------------
   function save() {
-    localStorage.setItem("demandes", JSON.stringify(demandes));
+    localStorage.setItem("demandes",JSON.stringify(demandes));
     renderTable();
-    if(location.hash === "#/gestionnaire") renderCalendar();
+    renderCalendar();
   }
 
-  // ---------------------- Initialisation ----------------------
   renderTable();
+  renderCalendar();
 
 });
 </script>
