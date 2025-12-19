@@ -17,6 +17,7 @@ th, td { border: 1px solid #ccc; padding: 5px; text-align: center; }
 .hidden { display: none; }
 button { cursor: pointer; }
 #confirmation { color: green; display: none; margin-top: 10px; }
+.date-fr { font-weight: bold; color: #333; margin-left: 5px; }
 </style>
 </head>
 
@@ -79,7 +80,23 @@ document.addEventListener("DOMContentLoaded", function() {
   let demandes = JSON.parse(localStorage.getItem("demandes") || "[]");
   let calendar;
 
-  // ROUTAGE HASH
+  // ---------------------- Fonctions de conversion ----------------------
+  function formatDateFR(isoDate) {
+    if(!isoDate) return "";
+    const d = new Date(isoDate);
+    const day = String(d.getDate()).padStart(2,'0');
+    const month = String(d.getMonth()+1).padStart(2,'0');
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
+  }
+
+  function parseDateFR(dateFR) {
+    if(!dateFR) return "";
+    const [day, month, year] = dateFR.split('-');
+    return `${year}-${month}-${day}`;
+  }
+
+  // ---------------------- Routage Hash ----------------------
   function updateView() {
     if(location.hash === "#/gestionnaire") {
       document.getElementById("demandeur").classList.add("hidden");
@@ -92,7 +109,7 @@ document.addEventListener("DOMContentLoaded", function() {
   window.addEventListener("hashchange", updateView);
   updateView();
 
-  // FORMULAIRE
+  // ---------------------- Formulaire ----------------------
   document.getElementById("formDemande").onsubmit = function(e) {
     e.preventDefault();
 
@@ -114,7 +131,7 @@ document.addEventListener("DOMContentLoaded", function() {
     setTimeout(() => { conf.style.display = "none"; }, 3000);
   };
 
-  // TABLEAU
+  // ---------------------- Tableau ----------------------
   function renderTable() {
     const tableBody = document.getElementById("tableDemandes");
     tableBody.innerHTML = "";
@@ -126,7 +143,10 @@ document.addEventListener("DOMContentLoaded", function() {
         <td><a href="${d.fichier}" target="_blank">Lien</a></td>
         <td>${d.priorite}</td>
         <td>${d.dateSouhaitee || ""}</td>
-        <td><input type="date" value="${d.dateReelle || ""}" onchange="setDate(${d.id}, this.value)"></td>
+        <td>
+          <input type="date" value="${d.dateReelle || ""}" onchange="setDate(${d.id}, this.value)">
+          <span class="date-fr">${formatDateFR(d.dateReelle)}</span>
+        </td>
         <td>${d.statut}</td>
         <td>
           <button onclick="setStatut(${d.id}, 'Validée')">Valider</button>
@@ -137,7 +157,7 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
-  // MODIFICATION STATUT / DATE
+  // ---------------------- Gestion Statut / Date / Supprimer ----------------------
   window.setStatut = function(id, statut) {
     let demande = demandes.find(d => d.id === id);
     if(demande) { demande.statut = statut; save(); }
@@ -146,7 +166,7 @@ document.addEventListener("DOMContentLoaded", function() {
   window.setDate = function(id, date) {
     let demande = demandes.find(d => d.id === id);
     if(demande) { 
-      // Conversion en ISO YYYY-MM-DD pour FullCalendar
+      // Conversion ISO YYYY-MM-DD pour stockage et calendrier
       let d = new Date(date);
       demande.dateReelle = d.toISOString().slice(0,10);
       save(); 
@@ -160,7 +180,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   }
 
-  // CALENDRIER
+  // ---------------------- Calendrier ----------------------
   function renderCalendar() {
     const calendarEl = document.getElementById("calendar");
     if(!calendarEl || typeof FullCalendar === "undefined") return;
@@ -183,14 +203,14 @@ document.addEventListener("DOMContentLoaded", function() {
     calendar.render();
   }
 
-  // SAUVEGARDE
+  // ---------------------- Sauvegarde ----------------------
   function save() {
     localStorage.setItem("demandes", JSON.stringify(demandes));
     renderTable();
     renderCalendar();
   }
 
-  // INITIALISATION
+  // ---------------------- Initialisation ----------------------
   renderTable();
   renderCalendar();
 
