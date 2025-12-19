@@ -18,12 +18,18 @@ th, td { border: 1px solid #ccc; padding: 5px; text-align: center; }
 button { cursor: pointer; }
 #confirmation { color: green; display: none; margin-top: 10px; }
 .date-fr { font-weight: bold; color: #333; margin-left: 5px; }
+nav a { margin-right: 10px; text-decoration: underline; cursor: pointer; color: blue; }
 </style>
 </head>
 
 <body>
 
 <h1>Gestion Impressions 3D – Bambu Lab H2D</h1>
+
+<nav>
+  <a href="#/demandeur">Formulaire</a>
+  <a href="#/gestionnaire">Gestionnaire</a>
+</nav>
 
 <!-- DEMANDEUR -->
 <div id="demandeur">
@@ -90,12 +96,13 @@ document.addEventListener("DOMContentLoaded", function() {
     return `${day}-${month}-${year}`;
   }
 
-  // ---------------------- Routage Hash ----------------------
+  // ---------------------- Hash / Routage ----------------------
   function updateView() {
-    if(location.hash === "#/gestionnaire") {
+    const hash = location.hash;
+    if(hash === "#/gestionnaire") {
       document.getElementById("demandeur").classList.add("hidden");
       document.getElementById("gestionnaire").classList.remove("hidden");
-      renderCalendar(); // rendre après affichage
+      renderCalendar(); // rendu uniquement ici
     } else {
       document.getElementById("demandeur").classList.remove("hidden");
       document.getElementById("gestionnaire").classList.add("hidden");
@@ -103,17 +110,14 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   window.addEventListener("hashchange", updateView);
-
-  // Forcer un hash par défaut si vide
   if(!window.location.hash || window.location.hash === "#/") {
     window.location.hash = "#/demandeur";
   }
-
-  // Petit délai pour s'assurer que le hash initial est lu
-  setTimeout(updateView, 10);
+  updateView(); // exécute immédiatement
 
   // ---------------------- Formulaire ----------------------
-  document.getElementById("formDemande").onsubmit = function(e) {
+  const form = document.getElementById("formDemande");
+  form.onsubmit = function(e) {
     e.preventDefault();
 
     demandes.push({
