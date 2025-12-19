@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Test Calendrier 3D</title>
+
+<!-- FullCalendar CSS et JS depuis CDN -->
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales/fr.js"></script>
+
+<style>
+body { font-family: Arial; margin: 20px; }
+#calendar { height: 600px; background: #f5f5f5; padding: 10px; border-radius: 8px; }
+h1 { color: #333; }
+</style>
+</head>
+
+<body>
+<h1>Test Calendrier FullCalendar</h1>
+<div id="calendar"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const calendarEl = document.getElementById('calendar');
+
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'fr',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek'
+        },
+        events: [
+            { title: 'Événement Test', start: '2025-12-20', backgroundColor:'#ff6666', borderColor:'#ff6666' }
+        ],
+        eventClick: function(info) {
+            alert(info.event.title);
+        }
+    });
+
+    calendar.render();
+});
+</script>
+</body>
+</html>
