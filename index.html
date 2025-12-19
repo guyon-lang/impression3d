@@ -71,10 +71,10 @@ button { cursor: pointer; }
 </div>
 
 <!-- FullCalendar JS -->
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales/fr.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales/fr.js"></script>
 
-<script defer>
+<script>
 document.addEventListener("DOMContentLoaded", function() {
 
   let demandes = JSON.parse(localStorage.getItem("demandes") || "[]");
@@ -166,7 +166,6 @@ document.addEventListener("DOMContentLoaded", function() {
   window.setDate = function(id, date) {
     let demande = demandes.find(d => d.id === id);
     if(demande) { 
-      // Conversion ISO YYYY-MM-DD pour stockage et calendrier
       let d = new Date(date);
       demande.dateReelle = d.toISOString().slice(0,10);
       save(); 
