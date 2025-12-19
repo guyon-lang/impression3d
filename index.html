@@ -70,11 +70,11 @@ button { cursor: pointer; }
 <div id="calendar"></div>
 </div>
 
-<!-- FullCalendar JS -->
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales/fr.js"></script>
+<!-- FullCalendar JS via module ES -->
+<script type="module">
+import { Calendar } from 'https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.esm.js';
+import frLocale from 'https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales/fr.js';
 
-<script>
 document.addEventListener("DOMContentLoaded", function() {
 
   let demandes = JSON.parse(localStorage.getItem("demandes") || "[]");
@@ -182,13 +182,13 @@ document.addEventListener("DOMContentLoaded", function() {
   // ---------------------- Calendrier ----------------------
   function renderCalendar() {
     const calendarEl = document.getElementById("calendar");
-    if(!calendarEl || typeof FullCalendar === "undefined") return;
+    if(!calendarEl) return;
 
     if(calendar) calendar.destroy();
 
-    calendar = new FullCalendar.Calendar(calendarEl, {
+    calendar = new Calendar(calendarEl, {
       initialView: "dayGridMonth",
-      locale: "fr",
+      locale: frLocale,
       events: demandes
         .filter(d => d.statut === "Validée" && d.dateReelle)
         .map(d => ({
