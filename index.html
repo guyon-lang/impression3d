@@ -137,6 +137,7 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
+  // MODIFICATION STATUT / DATE
   window.setStatut = function(id, statut) {
     let demande = demandes.find(d => d.id === id);
     if(demande) { demande.statut = statut; save(); }
@@ -144,7 +145,12 @@ document.addEventListener("DOMContentLoaded", function() {
 
   window.setDate = function(id, date) {
     let demande = demandes.find(d => d.id === id);
-    if(demande) { demande.dateReelle = date; save(); }
+    if(demande) { 
+      // Conversion en ISO YYYY-MM-DD pour FullCalendar
+      let d = new Date(date);
+      demande.dateReelle = d.toISOString().slice(0,10);
+      save(); 
+    }
   }
 
   window.supprimer = function(id) {
