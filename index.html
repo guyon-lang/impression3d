@@ -99,132 +99,135 @@ button { cursor: pointer; }
 </div>
 
 <script>
-// ====================== VARIABLES ======================
-let demandes = JSON.parse(localStorage.getItem("demandes") || "[]");
-let calendar;
+document.addEventListener("DOMContentLoaded", function() {
 
-// ====================== ROUTAGE HASH ======================
-function updateView() {
-  if (location.hash === "#/gestionnaire") {
-    document.getElementById("demandeur").classList.add("hidden");
-    document.getElementById("gestionnaire").classList.remove("hidden");
-  } else {
-    document.getElementById("demandeur").classList.remove("hidden");
-    document.getElementById("gestionnaire").classList.add("hidden");
+  let demandes = JSON.parse(localStorage.getItem("demandes") || "[]");
+  let calendar;
+
+  // ===== ROUTAGE HASH =====
+  function updateView() {
+    if (location.hash === "#/gestionnaire") {
+      document.getElementById("demandeur").classList.add("hidden");
+      document.getElementById("gestionnaire").classList.remove("hidden");
+    } else {
+      document.getElementById("demandeur").classList.remove("hidden");
+      document.getElementById("gestionnaire").classList.add("hidden");
+    }
   }
-}
-window.addEventListener("hashchange", updateView);
-updateView();
+  window.addEventListener("hashchange", updateView);
+  updateView();
 
-// ====================== FORMULAIRE ======================
-document.getElementById("formDemande").onsubmit = function(e) {
-  e.preventDefault();
+  // ===== FORMULAIRE =====
+  document.getElementById("formDemande").onsubmit = function(e) {
+    e.preventDefault();
 
-  let nomInput = document.getElementById("nom").value;
-  let fichierInput = document.getElementById("fichier").value;
-  let prioriteInput = document.getElementById("priorite").value;
-  let dateSouhaiteeInput = document.getElementById("dateSouhaitee").value;
+    let nomInput = document.getElementById("nom").value;
+    let fichierInput = document.getElementById("fichier").value;
+    let prioriteInput = document.getElementById("priorite").value;
+    let dateSouhaiteeInput = document.getElementById("dateSouhaitee").value;
 
-  demandes.push({
-    id: Date.now(),
-    nom: nomInput,
-    fichier: fichierInput,
-    priorite: prioriteInput,
-    dateSouhaitee: dateSouhaiteeInput,
-    dateReelle: "",
-    statut: "En attente"
-  });
+    demandes.push({
+      id: Date.now(),
+      nom: nomInput,
+      fichier: fichierInput,
+      priorite: prioriteInput,
+      dateSouhaitee: dateSouhaiteeInput,
+      dateReelle: "",
+      statut: "En attente"
+    });
 
-  save();
-  e.target.reset();
-
-  document.getElementById("confirmation").style.display = "block";
-};
-
-// ====================== TABLEAU ======================
-function renderTable() {
-  const tableBody = document.getElementById("tableDemandes");
-  tableBody.innerHTML = "";
-
-  demandes.forEach(d => {
-    let tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${d.nom}</td>
-      <td><a href="${d.fichier}" target="_blank">Lien</a></td>
-      <td>${d.priorite}</td>
-      <td>${d.dateSouhaitee || ""}</td>
-      <td><input type="date" value="${d.dateReelle || ""}" onchange="setDate(${d.id}, this.value)"></td>
-      <td>${d.statut}</td>
-      <td>
-        <button onclick="setStatut(${d.id}, 'Validée')">Valider</button>
-        <button onclick="setStatut(${d.id}, 'Refusée')">Refuser</button>
-        <button onclick="supprimer(${d.id})">Supprimer</button>
-      </td>`;
-    tableBody.appendChild(tr);
-  });
-}
-
-function setStatut(id, statut) {
-  let demande = demandes.find(d => d.id === id);
-  if (demande) {
-    demande.statut = statut;
     save();
+    e.target.reset();
+
+    // Affiche confirmation
+    const conf = document.getElementById("confirmation");
+    conf.style.display = "block";
+    setTimeout(() => { conf.style.display = "none"; }, 3000); // disparaît après 3s
+  };
+
+  // ===== TABLEAU =====
+  function renderTable() {
+    const tableBody = document.getElementById("tableDemandes");
+    tableBody.innerHTML = "";
+
+    demandes.forEach(d => {
+      let tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${d.nom}</td>
+        <td><a href="${d.fichier}" target="_blank">Lien</a></td>
+        <td>${d.priorite}</td>
+        <td>${d.dateSouhaitee || ""}</td>
+        <td><input type="date" value="${d.dateReelle || ""}" onchange="setDate(${d.id}, this.value)"></td>
+        <td>${d.statut}</td>
+        <td>
+          <button onclick="setStatut(${d.id}, 'Validée')">Valider</button>
+          <button onclick="setStatut(${d.id}, 'Refusée')">Refuser</button>
+          <button onclick="supprimer(${d.id})">Supprimer</button>
+        </td>`;
+      tableBody.appendChild(tr);
+    });
   }
-}
 
-function setDate(id, date) {
-  let demande = demandes.find(d => d.id === id);
-  if (demande) {
-    demande.dateReelle = date;
-    save();
+  window.setStatut = function(id, statut) {
+    let demande = demandes.find(d => d.id === id);
+    if (demande) {
+      demande.statut = statut;
+      save();
+    }
   }
-}
 
-function supprimer(id) {
-  if (confirm("Supprimer cette demande ?")) {
-    demandes = demandes.filter(d => d.id !== id);
-    save();
+  window.setDate = function(id, date) {
+    let demande = demandes.find(d => d.id === id);
+    if (demande) {
+      demande.dateReelle = date;
+      save();
+    }
   }
-}
 
-// ====================== CALENDRIER ======================
-function renderCalendar() {
-  const calendarEl = document.getElementById("calendar");
-  if (!calendarEl) return;
+  window.supprimer = function(id) {
+    if (confirm("Supprimer cette demande ?")) {
+      demandes = demandes.filter(d => d.id !== id);
+      save();
+    }
+  }
 
-  if (calendar) calendar.destroy();
+  // ===== CALENDRIER =====
+  function renderCalendar() {
+    const calendarEl = document.getElementById("calendar");
+    if (!calendarEl) return;
 
-  calendar = new FullCalendar.Calendar(calendarEl, {
-    initialView: "dayGridMonth",
-    locale: "fr",
-    events: demandes
-      .filter(d => d.statut === "Validée" && d.dateReelle)
-      .map(d => ({
-        title: `${d.nom} (${d.priorite})`,
-        start: d.dateReelle,
-        backgroundColor:
-          d.priorite === "Haute" ? "#ff6666" :
-          d.priorite === "Basse" ? "#93c47d" : "#ffd966"
-      }))
-  });
+    if (calendar) calendar.destroy();
 
-  calendar.render();
-}
+    calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: "dayGridMonth",
+      locale: "fr",
+      events: demandes
+        .filter(d => d.statut === "Validée" && d.dateReelle)
+        .map(d => ({
+          title: `${d.nom} (${d.priorite})`,
+          start: d.dateReelle,
+          backgroundColor:
+            d.priorite === "Haute" ? "#ff6666" :
+            d.priorite === "Basse" ? "#93c47d" : "#ffd966"
+        }))
+    });
 
-// ====================== SAUVEGARDE ======================
-function save() {
-  localStorage.setItem("demandes", JSON.stringify(demandes));
+    calendar.render();
+  }
+
+  // ===== SAUVEGARDE =====
+  function save() {
+    localStorage.setItem("demandes", JSON.stringify(demandes));
+    renderTable();
+    renderCalendar();
+  }
+
+  // ===== INITIALISATION =====
   renderTable();
   renderCalendar();
-}
 
-// ====================== INITIALISATION ======================
-renderTable();
-renderCalendar();
+});
 </script>
 
 </body>
 </html>
-
-</html>
-
