@@ -1,21 +1,49 @@
-  <!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
 <title>Gestion Impressions 3D</title>
 
+<!-- FullCalendar CSS -->
 <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel="stylesheet">
 
 <style>
-body { font-family: Arial, sans-serif; margin: 20px; }
+body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+}
 h1 { margin-top: 0; }
-form input, form select, form textarea, form button { display: block; margin-bottom: 10px; width: 300px; }
-table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-th, td { border: 1px solid #ccc; padding: 5px; text-align: center; }
-#calendar { margin-top: 30px; height: 650px; }
+
+form input, form select, form textarea, form button {
+  display: block;
+  margin-bottom: 10px;
+  width: 300px;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-top: 20px;
+}
+th, td {
+  border: 1px solid #ccc;
+  padding: 5px;
+  text-align: center;
+}
+
+#calendar {
+  margin-top: 30px;
+  height: 650px;
+}
+
 .hidden { display: none; }
 button { cursor: pointer; }
-#confirmation { color: green; display: none; margin-top: 10px; }
+
+#confirmation {
+  color: green;
+  display: none;
+  margin-top: 10px;
+}
 </style>
 </head>
 
@@ -23,27 +51,33 @@ button { cursor: pointer; }
 
 <h1>Gestion Impressions 3D – Bambu Lab H2D</h1>
 
-<!-- DEMANDEUR -->
+<!-- ================= DEMANDEUR ================= -->
 <div id="demandeur">
 <h2>Nouvelle demande d'impression</h2>
+
 <form id="formDemande">
   <input required placeholder="Nom" id="nom">
   <input required placeholder="Lien ou fichier STL" id="fichier">
+  
   <select id="priorite">
     <option>Basse</option>
     <option selected>Normale</option>
     <option>Haute</option>
   </select>
+
   <input type="date" id="dateSouhaitee">
   <textarea placeholder="Commentaires (optionnel)" id="commentaires"></textarea>
+
   <button type="submit">Envoyer la demande</button>
 </form>
+
 <p id="confirmation">✅ Votre demande a bien été envoyée.</p>
 </div>
 
-<!-- GESTIONNAIRE -->
+<!-- ================= GESTIONNAIRE ================= -->
 <div id="gestionnaire" class="hidden">
 <h2>Gestionnaire</h2>
+
 <table>
 <thead>
 <tr>
@@ -58,21 +92,24 @@ button { cursor: pointer; }
 </thead>
 <tbody id="tableDemandes"></tbody>
 </table>
+
 <div id="calendar"></div>
 </div>
 
-<!-- SCRIPTS -->
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales/fr.js"></script>
+<!-- FullCalendar JS -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales/fr.js" defer></script>
 
-<script>
+<!-- Script principal -->
+<script defer>
 document.addEventListener("DOMContentLoaded", function() {
+
   let demandes = JSON.parse(localStorage.getItem("demandes") || "[]");
   let calendar;
 
-  // ROUTAGE HASH
+  // ===== ROUTAGE HASH =====
   function updateView() {
-    if(location.hash === "#/gestionnaire") {
+    if (location.hash === "#/gestionnaire") {
       document.getElementById("demandeur").classList.add("hidden");
       document.getElementById("gestionnaire").classList.remove("hidden");
     } else {
@@ -83,79 +120,115 @@ document.addEventListener("DOMContentLoaded", function() {
   window.addEventListener("hashchange", updateView);
   updateView();
 
-  // FORMULAIRE
+  // ===== FORMULAIRE =====
   document.getElementById("formDemande").onsubmit = function(e) {
     e.preventDefault();
-    const nomVal = document.getElementById("nom").value;
-    const fichierVal = document.getElementById("fichier").value;
-    const prioriteVal = document.getElementById("priorite").value;
-    const dateSouhaiteeVal = document.getElementById("dateSouhaitee").value;
+
+    let nomInput = document.getElementById("nom").value;
+    let fichierInput = document.getElementById("fichier").value;
+    let prioriteInput = document.getElementById("priorite").value;
+    let dateSouhaiteeInput = document.getElementById("dateSouhaitee").value;
 
     demandes.push({
       id: Date.now(),
-      nom: nomVal,
-      fichier: fichierVal,
-      priorite: prioriteVal,
-      dateSouhaitee: dateSouhaiteeVal,
+      nom: nomInput,
+      fichier: fichierInput,
+      priorite: prioriteInput,
+      dateSouhaitee: dateSouhaiteeInput,
       dateReelle: "",
       statut: "En attente"
     });
 
     save();
     e.target.reset();
+
+    // Affiche confirmation
     const conf = document.getElementById("confirmation");
     conf.style.display = "block";
-    setTimeout(()=>{ conf.style.display="none"; },3000);
+    setTimeout(() => { conf.style.display = "none"; }, 3000);
   };
 
-  // TABLEAU
+  // ===== TABLEAU =====
   function renderTable() {
-    const tbody = document.getElementById("tableDemandes");
-    tbody.innerHTML = "";
-    demandes.forEach(d=>{
+    const tableBody = document.getElementById("tableDemandes");
+    tableBody.innerHTML = "";
+
+    demandes.forEach(d => {
       let tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${d.nom}</td>
         <td><a href="${d.fichier}" target="_blank">Lien</a></td>
         <td>${d.priorite}</td>
-        <td>${d.dateSouhaitee||""}</td>
-        <td><input type="date" value="${d.dateReelle||""}" onchange="setDate(${d.id},this.value)"></td>
+        <td>${d.dateSouhaitee || ""}</td>
+        <td><input type="date" value="${d.dateReelle || ""}" onchange="setDate(${d.id}, this.value)"></td>
         <td>${d.statut}</td>
         <td>
-          <button onclick="setStatut(${d.id},'Validée')">Valider</button>
-          <button onclick="setStatut(${d.id},'Refusée')">Refuser</button>
+          <button onclick="setStatut(${d.id}, 'Validée')">Valider</button>
+          <button onclick="setStatut(${d.id}, 'Refusée')">Refuser</button>
           <button onclick="supprimer(${d.id})">Supprimer</button>
         </td>`;
-      tbody.appendChild(tr);
+      tableBody.appendChild(tr);
     });
   }
 
-  window.setStatut = function(id,s){ let d=demandes.find(x=>x.id===id); if(d){d.statut=s;save();} }
-  window.setDate = function(id,date){ let d=demandes.find(x=>x.id===id); if(d){d.dateReelle=date;save();} }
-  window.supprimer = function(id){ if(confirm("Supprimer cette demande ?")){demandes=demandes.filter(d=>d.id!==id);save();} }
+  window.setStatut = function(id, statut) {
+    let demande = demandes.find(d => d.id === id);
+    if (demande) {
+      demande.statut = statut;
+      save();
+    }
+  }
 
-  // CALENDRIER
+  window.setDate = function(id, date) {
+    let demande = demandes.find(d => d.id === id);
+    if (demande) {
+      demande.dateReelle = date;
+      save();
+    }
+  }
+
+  window.supprimer = function(id) {
+    if (confirm("Supprimer cette demande ?")) {
+      demandes = demandes.filter(d => d.id !== id);
+      save();
+    }
+  }
+
+  // ===== CALENDRIER =====
   function renderCalendar() {
-    const el=document.getElementById("calendar");
-    if(!el) return;
-    if(calendar) calendar.destroy();
-    calendar = new FullCalendar.Calendar(el,{
-      initialView:'dayGridMonth',
-      locale:'fr',
-      events:demandes.filter(d=>d.statut==='Validée'&&d.dateReelle).map(d=>({
-        title:`${d.nom} (${d.priorite})`,
-        start:d.dateReelle,
-        backgroundColor: d.priorite==='Haute'?'#ff6666': d.priorite==='Basse'?'#93c47d':'#ffd966'
-      }))
+    const calendarEl = document.getElementById("calendar");
+    if (!calendarEl || typeof FullCalendar === "undefined") return;
+
+    if (calendar) calendar.destroy();
+
+    calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: "dayGridMonth",
+      locale: "fr",
+      events: demandes
+        .filter(d => d.statut === "Validée" && d.dateReelle)
+        .map(d => ({
+          title: `${d.nom} (${d.priorite})`,
+          start: d.dateReelle,
+          backgroundColor:
+            d.priorite === "Haute" ? "#ff6666" :
+            d.priorite === "Basse" ? "#93c47d" : "#ffd966"
+        }))
     });
+
     calendar.render();
   }
 
-  // SAUVEGARDE
-  function save(){ localStorage.setItem("demandes",JSON.stringify(demandes)); renderTable(); renderCalendar(); }
+  // ===== SAUVEGARDE =====
+  function save() {
+    localStorage.setItem("demandes", JSON.stringify(demandes));
+    renderTable();
+    renderCalendar();
+  }
 
-  // INITIALISATION
-  renderTable(); renderCalendar();
+  // ===== INITIALISATION =====
+  renderTable();
+  renderCalendar();
+
 });
 </script>
 
