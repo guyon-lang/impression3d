@@ -95,14 +95,22 @@ document.addEventListener("DOMContentLoaded", function() {
     if(location.hash === "#/gestionnaire") {
       document.getElementById("demandeur").classList.add("hidden");
       document.getElementById("gestionnaire").classList.remove("hidden");
-      renderCalendar(); // ✅ Forcer le rendu après affichage
+      renderCalendar(); // rendre après affichage
     } else {
       document.getElementById("demandeur").classList.remove("hidden");
       document.getElementById("gestionnaire").classList.add("hidden");
     }
   }
+
   window.addEventListener("hashchange", updateView);
-  updateView();
+
+  // Forcer un hash par défaut si vide
+  if(!window.location.hash || window.location.hash === "#/") {
+    window.location.hash = "#/demandeur";
+  }
+
+  // Petit délai pour s'assurer que le hash initial est lu
+  setTimeout(updateView, 10);
 
   // ---------------------- Formulaire ----------------------
   document.getElementById("formDemande").onsubmit = function(e) {
@@ -201,7 +209,7 @@ document.addEventListener("DOMContentLoaded", function() {
   function save() {
     localStorage.setItem("demandes", JSON.stringify(demandes));
     renderTable();
-    if(location.hash === "#/gestionnaire") renderCalendar(); // ✅ Toujours mettre à jour le calendrier
+    if(location.hash === "#/gestionnaire") renderCalendar();
   }
 
   // ---------------------- Initialisation ----------------------
